@@ -29,7 +29,7 @@
         <java.version>21</java.version>
         <spring-boot.version>3.2.0</spring-boot.version>
         <spring-security.version>6.2.0</spring-security.version>
-        <postgresql.version>42.7.1</postgresql.version>
+        <postgresql.version>42.7.2</postgresql.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
