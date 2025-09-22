@@ -1,0 +1,97 @@
+# Production Docker Compose - Uses pre-built images from DockerHub
+# Safra Bank Device Statistics DevSecOps Solution
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: safra-postgres
+    environment:
+      POSTGRES_DB: safra_device_stats
+      POSTGRES_USER: safra_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-safra_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - safra-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safra_user -d safra_device_stats"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Device Registration API (Internal Service) - FROM DOCKERHUB
+  device-registration-api:
+    image: ${DOCKERHUB_USERNAME:-safrabank}/safra-device-registration-api:${IMAGE_TAG:-latest}
+    container_name: safra-device-registration-api
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_USERNAME: safra_user
+      DB_PASSWORD: ${DB_PASSWORD:-safra_password}
+      JAVA_OPTS: "-Xmx512m -Xms256m"
+    ports:
+      - "8081:8081"
+    networks:
+      - safra-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 512M
+
+  # Statistics API (Public Service) - FROM DOCKERHUB
+  statistics-api:
+    image: ${DOCKERHUB_USERNAME:-safrabank}/safra-statistics-api:${IMAGE_TAG:-latest}
+    container_name: safra-statistics-api
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_USERNAME: safra_user
+      DB_PASSWORD: ${DB_PASSWORD:-safra_password}
+      DEVICE_REGISTRATION_API_URL: http://device-registration-api:8081
+      JAVA_OPTS: "-Xmx512m -Xms256m"
+    ports:
+      - "8080:8080"
+    networks:
+      - safra-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      device-registration-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 512M
+
+networks:
+  safra-network:
+    name: safra-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: safra-postgres-data

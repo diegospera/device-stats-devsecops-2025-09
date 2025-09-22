@@ -90,6 +90,51 @@ The system tracks device types (iOS, Android, Watch, TV) across multiple platfor
 - **Distributed Tracing**: OpenTelemetry ready
 - **Grafana Dashboards**: Operational visibility
 
+## 🏗️ CI/CD Pipeline
+
+### GitHub Actions Workflow
+
+The project includes a comprehensive CI/CD pipeline that automatically:
+
+- **Detects Changes**: Uses path filters to determine which services need rebuilding
+- **Runs Tests**: Executes Maven tests and security checks
+- **Builds Images**: Creates Docker images only for changed services
+- **Pushes to DockerHub**: Automatically publishes images with proper tags
+- **Security Scanning**: Runs Trivy vulnerability scans on all images
+- **Environment Deployment**: Supports staging and production deployments
+
+### Image Naming Convention
+
+```bash
+# Statistics API
+${DOCKERHUB_USERNAME}/safra-statistics-api:latest
+${DOCKERHUB_USERNAME}/safra-statistics-api:main-<sha>
+
+# Device Registration API
+${DOCKERHUB_USERNAME}/safra-device-registration-api:latest
+${DOCKERHUB_USERNAME}/safra-device-registration-api:main-<sha>
+```
+
+### Required GitHub Secrets
+
+```bash
+DOCKERHUB_USERNAME=your_dockerhub_username
+DOCKERHUB_TOKEN=your_dockerhub_access_token
+```
+
+### Deployment Options
+
+**Development (Local Build):**
+```bash
+docker-compose up -d --build
+```
+
+**Production (DockerHub Images):**
+```bash
+cp .env.production .env
+docker-compose -f docker-compose.prod.yml up -d
+```
+
 ## 🚀 Quick Start
 
 ### Prerequisites
