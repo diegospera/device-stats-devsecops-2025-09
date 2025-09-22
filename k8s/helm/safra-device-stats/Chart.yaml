@@ -1,0 +1,23 @@
+apiVersion: v2
+name: safra-device-stats
+description: Safra Bank Device Statistics DevSecOps Solution Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - safra
+  - banking
+  - device-statistics
+  - devsecops
+  - microservices
+home: https://github.com/safra-bank/device-stats-devsecops
+maintainers:
+  - name: Safra Bank DevSecOps Team
+    email: devsecops@safra.bank
+sources:
+  - https://github.com/safra-bank/device-stats-devsecops
+dependencies:
+  - name: postgresql
+    version: 12.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled

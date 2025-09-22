@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: safra-device-stats
+  labels:
+    app: postgres
+    tier: database
+data:
+  POSTGRES_DB: safra_device_stats
+  POSTGRES_USER: safra_user

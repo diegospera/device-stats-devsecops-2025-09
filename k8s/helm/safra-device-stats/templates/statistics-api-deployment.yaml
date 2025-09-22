@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.statisticsApi.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.statisticsApi.name }}
+    tier: frontend
+    component: public-api
+    chart: {{ include "safra-device-stats.chart" . }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.statisticsApi.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.statisticsApi.name }}
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.statisticsApi.name }}
+        tier: frontend
+        component: public-api
+    spec:
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+      - name: {{ .Values.statisticsApi.name }}
+        image: "{{ .Values.statisticsApi.image.repository }}:{{ .Values.statisticsApi.image.tag }}"
+        imagePullPolicy: {{ .Values.statisticsApi.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.statisticsApi.service.targetPort }}
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: {{ .Values.environment }}
+        - name: DEVICE_REGISTRATION_API_URL
+          value: "http://{{ .Values.deviceRegistrationApi.name }}:{{ .Values.deviceRegistrationApi.service.port }}"
+        - name: JAVA_OPTS
+          value: {{ .Values.jvm.opts }}
+        resources:
+          {{- toYaml .Values.statisticsApi.resources | nindent 12 }}
+        securityContext:
+          {{- toYaml .Values.podSecurityContext | nindent 12 }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: {{ .Values.statisticsApi.service.targetPort }}
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: {{ .Values.statisticsApi.service.targetPort }}
+          initialDelaySeconds: 30
+          periodSeconds: 10

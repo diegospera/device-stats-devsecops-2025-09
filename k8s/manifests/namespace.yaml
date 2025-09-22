@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: safra-device-stats
+  labels:
+    name: safra-device-stats
+    purpose: device-statistics
+    security.policy: restricted

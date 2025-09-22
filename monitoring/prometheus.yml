@@ -1,0 +1,33 @@
+# Prometheus configuration for Safra Bank Device Statistics monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # Add alerting rules here if needed
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Statistics API monitoring
+  - job_name: 'statistics-api'
+    static_configs:
+      - targets: ['statistics-api:8080']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 5s
+
+  # Device Registration API monitoring
+  - job_name: 'device-registration-api'
+    static_configs:
+      - targets: ['device-registration-api:8081']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 5s
+
+  # PostgreSQL monitoring (if postgres_exporter is added)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 10s

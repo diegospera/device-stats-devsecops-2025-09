@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-db
+  namespace: safra-device-stats
+  labels:
+    app: postgres
+    tier: database
+data:
+  01-schema.sql: |
+    -- Safra Bank Device Statistics Database Schema
+    -- PostgreSQL Database initialization script for Kubernetes
+    
+    -- Create device_registrations table
+    CREATE TABLE IF NOT EXISTS device_registrations (
+        id BIGSERIAL PRIMARY KEY,
+        user_key VARCHAR(255) NOT NULL,
+        device_type VARCHAR(50) NOT NULL CHECK (device_type IN ('iOS', 'Android', 'Watch', 'TV')),
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Create indexes for performance optimization
+    CREATE INDEX IF NOT EXISTS idx_device_type ON device_registrations(device_type);
+    CREATE INDEX IF NOT EXISTS idx_user_key ON device_registrations(user_key);
+    CREATE INDEX IF NOT EXISTS idx_created_at ON device_registrations(created_at);
+
+    -- Create unique constraint to prevent duplicate user-device combinations
+    ALTER TABLE device_registrations 
+    ADD CONSTRAINT uk_user_device UNIQUE (user_key, device_type);
+
+    -- Create function to automatically update updated_at timestamp
+    CREATE OR REPLACE FUNCTION update_updated_at_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.updated_at = CURRENT_TIMESTAMP;
+        RETURN NEW;
+    END;
+    $$ language 'plpgsql';
+
+    -- Create trigger to automatically update updated_at timestamp
+    CREATE TRIGGER update_device_registrations_updated_at 
+        BEFORE UPDATE ON device_registrations 
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+    -- Insert sample data for testing
+    INSERT INTO device_registrations (user_key, device_type) VALUES
+        ('user1', 'iOS'),
+        ('user1', 'Watch'),
+        ('user2', 'Android'),
+        ('user3', 'iOS'),
+        ('user4', 'TV'),
+        ('user5', 'Android'),
+        ('user6', 'iOS')
+    ON CONFLICT (user_key, device_type) DO NOTHING;
