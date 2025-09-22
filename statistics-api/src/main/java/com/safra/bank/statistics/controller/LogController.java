@@ -1,6 +1,7 @@
 package com.safra.bank.statistics.controller;
 
 // Statistics API Controller - Handles user login events and device statistics
+// Updated for CI/CD pipeline testing
 
 import com.safra.bank.shared.dto.LoginRequest;
 import com.safra.bank.shared.dto.LoginResponse;

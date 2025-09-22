@@ -1,6 +1,7 @@
 package com.safra.bank.device.controller;
 
 // Device Registration API Controller - Handles internal device registration operations
+// Updated for CI/CD pipeline testing
 
 import com.safra.bank.device.service.DeviceRegistrationService;
 import com.safra.bank.shared.dto.DeviceRegistrationRequest;
