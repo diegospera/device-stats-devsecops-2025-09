@@ -27,7 +27,7 @@ spec:
         fsGroup: 1002
       containers:
       - name: device-registration-api
-        image: safra-device-registration-api:1.0.0
+        image: diegohub/safra-device-registration-api:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8081

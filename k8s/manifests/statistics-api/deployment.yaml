@@ -27,7 +27,7 @@ spec:
         fsGroup: 1001
       containers:
       - name: statistics-api
-        image: safra-statistics-api:1.0.0
+        image: diegohub/safra-statistics-api:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
