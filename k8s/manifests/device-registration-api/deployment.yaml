@@ -25,6 +25,18 @@ spec:
         runAsUser: 1002
         runAsGroup: 1002
         fsGroup: 1002
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:16-alpine
+        command: ['sh', '-c', 'until pg_isready -h postgres -p 5432 -U safra_user; do echo waiting for postgres; sleep 2; done;']
+        env:
+        - name: PGUSER
+          value: safra_user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
       containers:
       - name: device-registration-api
         image: diegohub/safra-device-registration-api:latest
@@ -34,7 +46,7 @@ spec:
           name: http
         env:
         - name: SPRING_PROFILES_ACTIVE
-          value: "production"
+          value: "docker"
         - name: DB_HOST
           value: "postgres"
         - name: DB_PORT
@@ -91,10 +103,10 @@ spec:
           httpGet:
             path: /actuator/health/liveness
             port: 8081
-          initialDelaySeconds: 10
+          initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 30
+          failureThreshold: 60
       volumes:
       - name: tmp
         emptyDir: {}

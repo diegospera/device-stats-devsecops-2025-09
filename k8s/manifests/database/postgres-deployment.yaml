@@ -18,11 +18,7 @@ spec:
         app: postgres
         tier: database
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 999
-        runAsGroup: 999
-        fsGroup: 999
+      # Removed securityContext for local testing compatibility
       containers:
       - name: postgres
         image: postgres:16-alpine
@@ -48,12 +44,7 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
-          capabilities:
-            drop:
-            - ALL
+        # Removed container securityContext for local testing compatibility
         livenessProbe:
           exec:
             command:
