@@ -101,7 +101,7 @@ The project includes a comprehensive CI/CD pipeline that automatically:
 - **Builds Images**: Creates Docker images only for changed services
 - **Pushes to DockerHub**: Automatically publishes images with proper tags
 - **Security Scanning**: Runs Trivy vulnerability scans on all images
-- **Environment Deployment**: Supports staging and production deployments
+- **DockerHub Integration**: Automated image publishing to DockerHub registry
 
 ### Image Naming Convention
 

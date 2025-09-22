@@ -196,17 +196,22 @@ jobs:
         with:
           sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
 
-  # Deploy to staging (optional)
-  deploy-staging:
+  # DockerHub Push Notification
+  dockerhub-push-complete:
     runs-on: ubuntu-latest
     needs: [build-statistics-api, build-device-registration-api]
-    if: github.ref == 'refs/heads/main' && (needs.build-statistics-api.result == 'success' || needs.build-device-registration-api.result == 'success')
-    environment: staging
+    if: always() && github.ref == 'refs/heads/main' && (needs.build-statistics-api.result == 'success' || needs.build-device-registration-api.result == 'success')
 
     steps:
-      - name: Deploy to staging
+      - name: DockerHub Push Summary
         run: |
-          echo "🚀 Deploying to staging environment..."
-          echo "This would trigger your staging deployment process"
-          echo "Statistics API: ${{ secrets.DOCKERHUB_USERNAME }}/safra-statistics-api:latest"
-          echo "Device Registration API: ${{ secrets.DOCKERHUB_USERNAME }}/safra-device-registration-api:latest"
+          echo "🐳 DockerHub Push completed successfully!"
+          echo "✅ Images published to DockerHub:"
+          if [ "${{ needs.build-statistics-api.result }}" == "success" ]; then
+            echo "  📊 Statistics API: ${{ secrets.DOCKERHUB_USERNAME }}/safra-statistics-api:latest"
+          fi
+          if [ "${{ needs.build-device-registration-api.result }}" == "success" ]; then
+            echo "  🔧 Device Registration API: ${{ secrets.DOCKERHUB_USERNAME }}/safra-device-registration-api:latest"
+          fi
+          echo ""
+          echo "🚀 Ready for production deployment with docker-compose.prod.yml"
