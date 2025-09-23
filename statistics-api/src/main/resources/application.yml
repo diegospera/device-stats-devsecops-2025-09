@@ -35,7 +35,7 @@ spring:
   # JPA configuration
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create
     show-sql: false
     properties:
       hibernate:
