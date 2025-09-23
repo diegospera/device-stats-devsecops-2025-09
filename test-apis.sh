@@ -8,12 +8,28 @@ set -e
 echo "🏦 Safra Bank Device Statistics API Testing"
 echo "============================================"
 
-# Configuration - Auto-detect production vs development setup
+# Configuration - Auto-detect production vs development vs Kubernetes setup
 if docker-compose -f docker-compose.prod.yml ps 2>/dev/null | grep -q "safra-nginx.*Up"; then
     echo "🔍 Detected production setup (Nginx reverse proxy)"
     STATISTICS_API_URL="${STATISTICS_API_URL:-http://localhost/api/statistics}"
     DEVICE_REG_API_URL="${DEVICE_REG_API_URL:-http://localhost/api/internal}"
     NGINX_PROXY=true
+elif kubectl get pods -n safra-device-stats 2>/dev/null | grep -q "Running"; then
+    echo "🔍 Detected Kubernetes setup"
+    STATISTICS_API_URL="${STATISTICS_API_URL:-http://localhost:8080}"
+    DEVICE_REG_API_URL="${DEVICE_REG_API_URL:-http://localhost:8081}"
+    NGINX_PROXY=false
+    K8S_SETUP=true
+
+    # Check if port-forwards are running
+    if ! pgrep -f "kubectl port-forward.*statistics-api.*8080" > /dev/null; then
+        echo "⚠️  Port-forward for Statistics API not detected. Run:"
+        echo "   kubectl port-forward -n safra-device-stats svc/statistics-api 8080:8080 &"
+    fi
+    if ! pgrep -f "kubectl port-forward.*device-registration-api.*8081" > /dev/null; then
+        echo "⚠️  Port-forward for Device Registration API not detected. Run:"
+        echo "   kubectl port-forward -n safra-device-stats svc/device-registration-api 8081:8081 &"
+    fi
 elif docker-compose ps 2>/dev/null | grep -q "Up"; then
     echo "🔍 Detected development setup (direct service access)"
     STATISTICS_API_URL="${STATISTICS_API_URL:-http://localhost:8080}"
