@@ -35,6 +35,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <springdoc-openapi.version>2.8.1</springdoc-openapi.version>
         <testcontainers.version>1.21.0</testcontainers.version>
+
+        <!-- Security: Override vulnerable dependency versions -->
+        <jackson.version>2.18.2</jackson.version>
+        <logback.version>1.5.12</logback.version>
+        <micrometer.version>1.14.2</micrometer.version>
+        <hibernate.version>6.6.4.Final</hibernate.version>
     </properties>
 
     <dependencyManagement>
@@ -84,11 +90,38 @@
                 <version>${springdoc-openapi.version}</version>
             </dependency>
 
+            <!-- Security: Explicit versions for vulnerable dependencies -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+
             <!-- Monitoring -->
             <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
-                <version>1.12.0</version>
+                <version>${micrometer.version}</version>
             </dependency>
 
             <!-- Testing -->
