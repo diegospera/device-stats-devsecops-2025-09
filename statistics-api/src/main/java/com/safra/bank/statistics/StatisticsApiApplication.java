@@ -20,6 +20,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * - This API is publicly accessible and acts as the entry point
  * - Communicates internally with DeviceRegistrationAPI
  * - Implements proper logging and monitoring for banking security
+ * - Security hardening with updated Spring Boot 3.4.5 and dependencies
  */
 @SpringBootApplication(scanBasePackages = {
     "com.safra.bank.statistics",

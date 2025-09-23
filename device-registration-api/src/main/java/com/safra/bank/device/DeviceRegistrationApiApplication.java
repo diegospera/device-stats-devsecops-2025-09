@@ -22,6 +22,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * - Called by StatisticsAPI for device registration operations
  * - Implements proper logging and monitoring for banking security
  * - Handles database operations with transactional integrity
+ * - Security hardening with updated Spring Boot 3.4.5 and dependencies
  */
 @SpringBootApplication(scanBasePackages = {
     "com.safra.bank.device",

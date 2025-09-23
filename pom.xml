@@ -15,7 +15,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.1</version>
+        <version>3.4.5</version>
         <relativePath/>
     </parent>
 
@@ -27,9 +27,9 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-boot.version>3.4.1</spring-boot.version>
-        <spring-security.version>6.4.2</spring-security.version>
-        <postgresql.version>42.7.4</postgresql.version>
+        <spring-boot.version>3.4.5</spring-boot.version>
+        <spring-security.version>6.4.10</spring-security.version>
+        <postgresql.version>42.7.7</postgresql.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -41,6 +41,8 @@
         <logback.version>1.5.12</logback.version>
         <micrometer.version>1.14.2</micrometer.version>
         <hibernate.version>6.6.4.Final</hibernate.version>
+        <tomcat.version>10.1.44</tomcat.version>
+        <spring-framework.version>6.2.11</spring-framework.version>
     </properties>
 
     <dependencyManagement>
@@ -122,6 +124,18 @@
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
                 <version>${micrometer.version}</version>
+            </dependency>
+
+            <!-- Security: Explicit version overrides for vulnerable components -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${spring-framework.version}</version>
             </dependency>
 
             <!-- Testing -->
