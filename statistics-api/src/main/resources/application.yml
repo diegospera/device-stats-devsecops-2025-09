@@ -1,5 +1,6 @@
 # Safra Bank Statistics API Configuration
 # DevSecOps-focused Spring Boot configuration
+# Updated: Fixed database hostname configuration for Kubernetes deployment
 
 server:
   port: 8080
@@ -18,7 +19,7 @@ spring:
   
   # Database configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/safra_device_stats
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:safra_device_stats}
     username: ${DB_USERNAME:safra_user}
     password: ${DB_PASSWORD:safra_password}
     driver-class-name: org.postgresql.Driver
@@ -127,9 +128,9 @@ spring:
   config:
     activate:
       on-profile: docker
-  
+
   datasource:
-    url: jdbc:postgresql://postgres:5432/safra_device_stats
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:safra_device_stats}
     username: ${DB_USERNAME:safra_user}
     password: ${DB_PASSWORD:safra_password}
 
