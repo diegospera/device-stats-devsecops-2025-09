@@ -296,6 +296,14 @@ docker-compose -f docker-compose.prod.yml up -d
      --create-namespace \
      --set statisticsApi.resources.limits.memory=2Gi \
      --set deviceRegistrationApi.resources.limits.memory=1Gi
+
+   # Using custom values file (create your own)
+   # Copy values.yaml and modify as needed
+   cp k8s/helm/safra-device-stats/values.yaml values-custom.yaml
+   helm install safra-device-stats k8s/helm/safra-device-stats/ \
+     --namespace safra-device-stats \
+     --create-namespace \
+     -f values-custom.yaml
    ```
 
 6. **Troubleshooting Helm Deployment**
@@ -321,12 +329,31 @@ docker-compose -f docker-compose.prod.yml up -d
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| **Database Configuration** | | |
 | `DB_USERNAME` | Database username | `safra_user` |
 | `DB_PASSWORD` | Database password | `safra_password` |
+| `DB_NAME` | Database name | `safra_device_stats` |
 | `DB_HOST` | Database host | `localhost` |
 | `DB_PORT` | Database port | `5432` |
+| **API Configuration** | | |
+| `STATISTICS_API_PORT` | Statistics API port | `8080` |
+| `DEVICE_REGISTRATION_API_PORT` | Device Registration API port | `8081` |
 | `DEVICE_REGISTRATION_API_URL` | Internal API URL | `http://localhost:8081` |
+| **Security Configuration** | | |
+| `JWT_SECRET` | JWT signing key | `your-jwt-secret-key-here` |
+| `CORS_ALLOWED_ORIGINS` | CORS allowed origins | `https://yourdomain.com` |
+| **Container Configuration** | | |
+| `DOCKERHUB_USERNAME` | DockerHub username | `diegohub` |
+| `IMAGE_TAG` | Docker image tag | `latest` |
 | `JAVA_OPTS` | JVM options | `-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0` |
+| **Monitoring Configuration** | | |
+| `PROMETHEUS_PORT` | Prometheus port | `9090` |
+| `GRAFANA_PORT` | Grafana port | `3000` |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana admin password | `admin` |
+| **Production Configuration** | | |
+| `DOMAIN_NAME` | Production domain | `api.your-domain.com` |
+| `NGINX_HTTP_PORT` | Nginx HTTP port | `80` |
+| `NGINX_HTTPS_PORT` | Nginx HTTPS port | `443` |
 
 ### Profiles
 
@@ -400,7 +427,11 @@ mvn test
 
 ### Integration Tests
 ```bash
-mvn test -Pintegration-tests
+# Run tests with Spring Boot test profile
+mvn test -Dspring.profiles.active=test
+
+# Run all tests including integration tests
+mvn verify
 ```
 
 ### Load Testing
@@ -413,11 +444,17 @@ ab -n 1000 -c 10 http://localhost:8080/Log/auth/statistics?deviceType=iOS
 
 ### Access Monitoring Dashboards
 
-1. **Prometheus**: http://localhost:9090 (with monitoring profile)
-2. **Grafana**: http://localhost:3000 (admin/admin)
-3. **Application Metrics**: 
+> **Note**: Prometheus and Grafana monitoring stack is available for production deployment but not included in the basic Docker Compose setup. Use the production configuration for full monitoring.
+
+1. **Application Metrics** (Always Available):
    - Statistics API: http://localhost:8080/actuator/prometheus
    - Device Registration API: http://localhost:8081/actuator/prometheus
+   - Health Checks: http://localhost:8080/actuator/health
+
+2. **Production Monitoring Stack**:
+   - **Prometheus**: http://localhost:9090 (when monitoring is configured)
+   - **Grafana**: http://localhost:3000 (admin/admin)
+   - Configure monitoring by adding Prometheus/Grafana services to docker-compose.yml
 
 ### Key Metrics
 
@@ -429,36 +466,64 @@ ab -n 1000 -c 10 http://localhost:8080/Log/auth/statistics?deviceType=iOS
 
 ## 🔄 CI/CD Pipeline
 
-### GitHub Actions Workflow (Example)
+### GitHub Actions Workflow
+
+The project includes a sophisticated CI/CD pipeline (`.github/workflows/ci-cd.yml`) with:
 
 ```yaml
-name: DevSecOps Pipeline
-on: [push, pull_request]
+name: CI/CD Pipeline - Safra Bank Device Statistics
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
-  security-scan:
+  # Smart change detection to build only modified services
+  detect-changes:
     runs-on: ubuntu-latest
+    outputs:
+      statistics-api: ${{ steps.changes.outputs.statistics-api }}
+      device-registration-api: ${{ steps.changes.outputs.device-registration-api }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Run Security Scan
-        run: |
-          mvn dependency-check:check
-          docker run --rm -v $(pwd):/workspace aquasec/trivy filesystem /workspace
-  
-  build-and-test:
+      - uses: actions/checkout@v4
+      - name: Detect file changes
+        uses: dorny/paths-filter@v2
+        # Detects changes in specific service directories
+
+  # Comprehensive testing and security scanning
+  test:
     runs-on: ubuntu-latest
+    needs: detect-changes
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 21
-        uses: actions/setup-java@v3
-        with:
-          java-version: '21'
-      - name: Run Tests
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+      - name: Run Maven Tests
         run: mvn clean test
-      - name: Build Docker Images
-        run: |
-          docker build -t safra-statistics-api:${{ github.sha }} -f statistics-api/Dockerfile .
-          docker build -t safra-device-registration-api:${{ github.sha }} -f device-registration-api/Dockerfile .
+      - name: Security Scan with Trivy
+        run: docker run --rm -v $(pwd):/workspace aquasec/trivy filesystem /workspace
+
+  # Multi-platform Docker builds for changed services only
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, test]
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+    steps:
+      - name: Build and Push to DockerHub
+        # Only builds services that have changed
+        # Supports multi-platform builds (AMD64, ARM64)
+        # Automatic tagging with latest and git SHA
 ```
+
+**Key Features:**
+- **Smart Builds**: Only rebuilds services with actual changes
+- **Multi-Platform**: AMD64 and ARM64 architecture support
+- **Security First**: Trivy vulnerability scanning on every build
+- **Automated Publishing**: Direct DockerHub integration
+- **Change Detection**: Uses path filters for efficient builds
 
 ## 🔐 Security Considerations
 
