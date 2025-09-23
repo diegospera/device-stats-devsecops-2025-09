@@ -223,25 +223,96 @@ docker-compose -f docker-compose.prod.yml up -d
    kubectl get ingress -n safra-device-stats
    ```
 
-#### Option 2: Helm Chart
+#### Option 2: Helm Chart (Recommended)
 
-1. **Install with Helm**
+1. **Prerequisites**
    ```bash
-   # Add dependencies
+   # Ensure you have a local Kubernetes cluster running
+   kubectl cluster-info
+
+   # Verify Helm is installed
+   helm version
+   ```
+
+2. **Install the Helm Chart**
+   ```bash
+   # Download dependencies (PostgreSQL subchart)
    helm dependency update k8s/helm/safra-device-stats/
-   
-   # Install chart
+
+   # Install chart to local cluster
    helm install safra-device-stats k8s/helm/safra-device-stats/ \
      --namespace safra-device-stats \
      --create-namespace
    ```
 
-2. **Customize Values**
+3. **Verify Deployment**
    ```bash
-   # Use custom values
-   helm install safra-device-stats k8s/helm/safra-device-stats/ \
-     -f k8s/helm/safra-device-stats/values-production.yaml \
+   # Check Helm release status
+   helm status safra-device-stats -n safra-device-stats
+
+   # Monitor pod startup
+   kubectl get pods -n safra-device-stats -w
+
+   # Check services
+   kubectl get services -n safra-device-stats
+   ```
+
+4. **Useful Helm Commands**
+   ```bash
+   # Upgrade deployment with new values
+   helm upgrade safra-device-stats k8s/helm/safra-device-stats/ \
      --namespace safra-device-stats
+
+   # View deployment history
+   helm history safra-device-stats -n safra-device-stats
+
+   # Rollback to previous version
+   helm rollback safra-device-stats 1 -n safra-device-stats
+
+   # Uninstall deployment
+   helm uninstall safra-device-stats -n safra-device-stats
+
+   # Delete namespace (optional)
+   kubectl delete namespace safra-device-stats
+   ```
+
+5. **Customize Values for Different Environments**
+   ```bash
+   # Development with ingress disabled (default)
+   helm install safra-device-stats k8s/helm/safra-device-stats/ \
+     --namespace safra-device-stats \
+     --create-namespace
+
+   # Production with ingress enabled
+   helm install safra-device-stats k8s/helm/safra-device-stats/ \
+     --namespace safra-device-stats \
+     --create-namespace \
+     --set statisticsApi.ingress.enabled=true \
+     --set statisticsApi.ingress.hosts[0].host=api.your-domain.com
+
+   # Custom resource limits
+   helm install safra-device-stats k8s/helm/safra-device-stats/ \
+     --namespace safra-device-stats \
+     --create-namespace \
+     --set statisticsApi.resources.limits.memory=2Gi \
+     --set deviceRegistrationApi.resources.limits.memory=1Gi
+   ```
+
+6. **Troubleshooting Helm Deployment**
+   ```bash
+   # View application logs
+   kubectl logs -l app=statistics-api -n safra-device-stats
+   kubectl logs -l app=device-registration-api -n safra-device-stats
+
+   # Check PostgreSQL logs
+   kubectl logs safra-device-stats-postgresql-0 -n safra-device-stats
+
+   # Debug failed pods
+   kubectl describe pod <pod-name> -n safra-device-stats
+
+   # Port forward for local access
+   kubectl port-forward svc/statistics-api 8080:8080 -n safra-device-stats
+   kubectl port-forward svc/device-registration-api 8081:8081 -n safra-device-stats
    ```
 
 ## 🔧 Configuration
