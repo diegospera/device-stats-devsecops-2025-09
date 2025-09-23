@@ -38,11 +38,12 @@
 
         <!-- Security: Override vulnerable dependency versions -->
         <jackson.version>2.18.2</jackson.version>
-        <logback.version>1.5.12</logback.version>
+        <logback.version>1.5.13</logback.version>
         <micrometer.version>1.14.2</micrometer.version>
         <hibernate.version>6.6.4.Final</hibernate.version>
         <tomcat.version>10.1.44</tomcat.version>
         <spring-framework.version>6.2.11</spring-framework.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
     </properties>
 
     <dependencyManagement>
@@ -136,6 +137,11 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-core</artifactId>
                 <version>${spring-framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
             </dependency>
 
             <!-- Testing -->
