@@ -278,17 +278,22 @@ docker-compose -f docker-compose.prod.yml up -d
 
 5. **Customize Values for Different Environments**
    ```bash
-   # Development with ingress disabled (default)
+   # Default deployment with ingress enabled for Statistics API
    helm install safra-device-stats k8s/helm/safra-device-stats/ \
      --namespace safra-device-stats \
      --create-namespace
 
-   # Production with ingress enabled
+   # Production with custom domain
    helm install safra-device-stats k8s/helm/safra-device-stats/ \
      --namespace safra-device-stats \
      --create-namespace \
-     --set statisticsApi.ingress.enabled=true \
      --set statisticsApi.ingress.hosts[0].host=api.your-domain.com
+
+   # Development/testing with ingress disabled (port-forward only)
+   helm install safra-device-stats k8s/helm/safra-device-stats/ \
+     --namespace safra-device-stats \
+     --create-namespace \
+     --set statisticsApi.ingress.enabled=false
 
    # Custom resource limits
    helm install safra-device-stats k8s/helm/safra-device-stats/ \
@@ -318,9 +323,13 @@ docker-compose -f docker-compose.prod.yml up -d
    # Debug failed pods
    kubectl describe pod <pod-name> -n safra-device-stats
 
-   # Port forward for local access
+   # Port forward for local access (development/testing)
    kubectl port-forward svc/statistics-api 8080:8080 -n safra-device-stats
    kubectl port-forward svc/device-registration-api 8081:8081 -n safra-device-stats
+
+   # Check ingress status (Statistics API public access)
+   kubectl get ingress -n safra-device-stats
+   kubectl describe ingress statistics-api-ingress -n safra-device-stats
    ```
 
 ## 🔧 Configuration
@@ -432,6 +441,33 @@ mvn test -Dspring.profiles.active=test
 
 # Run all tests including integration tests
 mvn verify
+```
+
+### API Testing Script
+
+The repository includes a comprehensive testing script that automatically detects your deployment environment:
+
+```bash
+./test-apis.sh
+```
+
+**Supported Deployment Modes:**
+
+1. **Production** (Docker Compose + Nginx): Detects Nginx reverse proxy
+   - Tests via: `http://localhost/api/statistics`
+
+2. **Development** (Docker Compose direct): Detects running containers
+   - Tests via: `http://localhost:8080`
+
+3. **Kubernetes** (with auto-detection): Detects running K8s pods
+   - Tests via: `http://localhost:8080` and `http://localhost:8081` (requires port-forwards)
+   - Automatically checks for required port-forwards and provides guidance
+
+**Kubernetes Testing Requirements:**
+```bash
+# The script will detect if these are missing and provide instructions:
+kubectl port-forward -n safra-device-stats svc/statistics-api 8080:8080 &
+kubectl port-forward -n safra-device-stats svc/device-registration-api 8081:8081 &
 ```
 
 ### Load Testing
