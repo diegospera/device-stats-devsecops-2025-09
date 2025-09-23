@@ -8,9 +8,23 @@ set -e
 echo "🏦 Safra Bank Device Statistics API Testing"
 echo "============================================"
 
-# Configuration
-STATISTICS_API_URL="${STATISTICS_API_URL:-http://localhost:8080}"
-DEVICE_REG_API_URL="${DEVICE_REG_API_URL:-http://localhost:8081}"
+# Configuration - Auto-detect production vs development setup
+if docker-compose -f docker-compose.prod.yml ps 2>/dev/null | grep -q "safra-nginx.*Up"; then
+    echo "🔍 Detected production setup (Nginx reverse proxy)"
+    STATISTICS_API_URL="${STATISTICS_API_URL:-http://localhost/api/statistics}"
+    DEVICE_REG_API_URL="${DEVICE_REG_API_URL:-http://localhost/api/internal}"
+    NGINX_PROXY=true
+elif docker-compose ps 2>/dev/null | grep -q "Up"; then
+    echo "🔍 Detected development setup (direct service access)"
+    STATISTICS_API_URL="${STATISTICS_API_URL:-http://localhost:8080}"
+    DEVICE_REG_API_URL="${DEVICE_REG_API_URL:-http://localhost:8081}"
+    NGINX_PROXY=false
+else
+    echo "🔍 Using manual configuration"
+    STATISTICS_API_URL="${STATISTICS_API_URL:-http://localhost:8080}"
+    DEVICE_REG_API_URL="${DEVICE_REG_API_URL:-http://localhost:8081}"
+    NGINX_PROXY=false
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -23,14 +37,17 @@ NC='\033[0m' # No Color
 test_health() {
     local api_name=$1
     local api_url=$2
-    
+
     echo -e "${BLUE}Testing $api_name health...${NC}"
-    
+
     if curl -s -f "$api_url/actuator/health" > /dev/null; then
         echo -e "${GREEN}✓ $api_name is healthy${NC}"
         return 0
     else
         echo -e "${RED}✗ $api_name is not responding${NC}"
+        if [ "$NGINX_PROXY" = true ]; then
+            echo -e "${YELLOW}  Note: Using Nginx reverse proxy setup${NC}"
+        fi
         return 1
     fi
 }
