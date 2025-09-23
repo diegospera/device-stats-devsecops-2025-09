@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.statisticsApi.name }}
+  name: {{ .Values.deviceRegistrationApi.name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "safra-device-stats.statisticsApi.labels" . | nindent 4 }}
+    {{- include "safra-device-stats.deviceRegistrationApi.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.statisticsApi.replicaCount }}
+  replicas: {{ .Values.deviceRegistrationApi.replicaCount }}
   selector:
     matchLabels:
-      {{- include "safra-device-stats.statisticsApi.selectorLabels" . | nindent 6 }}
+      {{- include "safra-device-stats.deviceRegistrationApi.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "safra-device-stats.statisticsApi.labels" . | nindent 8 }}
+        {{- include "safra-device-stats.deviceRegistrationApi.labels" . | nindent 8 }}
     spec:
       securityContext:
         {{- toYaml .Values.securityContext | nindent 8 }}
@@ -32,11 +32,11 @@ spec:
               key: password
       {{- end }}
       containers:
-      - name: {{ .Values.statisticsApi.name }}
-        image: "{{ .Values.statisticsApi.image.repository }}:{{ .Values.statisticsApi.image.tag }}"
-        imagePullPolicy: {{ .Values.statisticsApi.image.pullPolicy }}
+      - name: {{ .Values.deviceRegistrationApi.name }}
+        image: "{{ .Values.deviceRegistrationApi.image.repository }}:{{ .Values.deviceRegistrationApi.image.tag }}"
+        imagePullPolicy: {{ .Values.deviceRegistrationApi.image.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.statisticsApi.service.targetPort }}
+        - containerPort: {{ .Values.deviceRegistrationApi.service.targetPort }}
           name: http
         env:
         - name: SPRING_PROFILES_ACTIVE
@@ -75,12 +75,10 @@ spec:
               name: {{ include "safra-device-stats.fullname" . }}-db-secret
               key: password
               {{- end }}
-        - name: DEVICE_REGISTRATION_API_URL
-          value: "http://{{ .Values.deviceRegistrationApi.name }}:{{ .Values.deviceRegistrationApi.service.port }}"
         - name: JAVA_OPTS
           value: {{ .Values.jvm.opts }}
         resources:
-          {{- toYaml .Values.statisticsApi.resources | nindent 12 }}
+          {{- toYaml .Values.deviceRegistrationApi.resources | nindent 12 }}
         securityContext:
           {{- toYaml .Values.podSecurityContext | nindent 12 }}
         volumeMounts:
@@ -91,7 +89,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
-            port: {{ .Values.statisticsApi.service.targetPort }}
+            port: {{ .Values.deviceRegistrationApi.service.targetPort }}
           initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 10
@@ -99,7 +97,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /actuator/health/readiness
-            port: {{ .Values.statisticsApi.service.targetPort }}
+            port: {{ .Values.deviceRegistrationApi.service.targetPort }}
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -107,7 +105,7 @@ spec:
         startupProbe:
           httpGet:
             path: /actuator/health/liveness
-            port: {{ .Values.statisticsApi.service.targetPort }}
+            port: {{ .Values.deviceRegistrationApi.service.targetPort }}
           initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 5
