@@ -38,7 +38,7 @@
 
         <!-- Security: Override vulnerable dependency versions -->
         <jackson.version>2.18.2</jackson.version>
-        <logback.version>1.5.12</logback.version>
+        <logback.version>1.5.13</logback.version>
         <micrometer.version>1.14.2</micrometer.version>
         <hibernate.version>6.6.4.Final</hibernate.version>
     </properties>
