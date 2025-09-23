@@ -1,0 +1,42 @@
+{{- if .Values.statisticsApi.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.statisticsApi.name }}-ingress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "safra-device-stats.statisticsApi.labels" . | nindent 4 }}
+  {{- with .Values.statisticsApi.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.statisticsApi.ingress.className }}
+  ingressClassName: {{ .Values.statisticsApi.ingress.className }}
+  {{- end }}
+  {{- if .Values.statisticsApi.ingress.tls }}
+  tls:
+    {{- range .Values.statisticsApi.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.statisticsApi.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ $.Values.statisticsApi.name }}
+                port:
+                  number: {{ $.Values.statisticsApi.service.port }}
+          {{- end }}
+    {{- end }}
+{{- end }}

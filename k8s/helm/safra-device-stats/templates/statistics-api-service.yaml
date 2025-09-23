@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.statisticsApi.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "safra-device-stats.statisticsApi.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.statisticsApi.service.type }}
+  ports:
+    - port: {{ .Values.statisticsApi.service.port }}
+      targetPort: {{ .Values.statisticsApi.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "safra-device-stats.statisticsApi.selectorLabels" . | nindent 4 }}

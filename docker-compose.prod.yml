@@ -26,15 +26,15 @@ services:
 
   # Device Registration API (Internal Service) - FROM DOCKERHUB
   device-registration-api:
-    image: ${DOCKERHUB_USERNAME:-safrabank}/safra-device-registration-api:${IMAGE_TAG:-latest}
+    image: ${DOCKERHUB_USERNAME:-diegohub}/safra-device-registration-api:${IMAGE_TAG:-latest}
     container_name: safra-device-registration-api
     environment:
       SPRING_PROFILES_ACTIVE: docker
       DB_USERNAME: safra_user
       DB_PASSWORD: ${DB_PASSWORD:-safra_password}
       JAVA_OPTS: "-Xmx512m -Xms256m"
-    ports:
-      - "8081:8081"
+    expose:
+      - "8081"
     networks:
       - safra-network
     depends_on:
@@ -56,7 +56,7 @@ services:
 
   # Statistics API (Public Service) - FROM DOCKERHUB
   statistics-api:
-    image: ${DOCKERHUB_USERNAME:-safrabank}/safra-statistics-api:${IMAGE_TAG:-latest}
+    image: ${DOCKERHUB_USERNAME:-diegohub}/safra-statistics-api:${IMAGE_TAG:-latest}
     container_name: safra-statistics-api
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -64,8 +64,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-safra_password}
       DEVICE_REGISTRATION_API_URL: http://device-registration-api:8081
       JAVA_OPTS: "-Xmx512m -Xms256m"
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     networks:
       - safra-network
     depends_on:
@@ -86,6 +86,30 @@ services:
           memory: 768M
         reservations:
           memory: 512M
+
+  # Nginx Reverse Proxy (Public Entry Point)
+  nginx:
+    image: nginx:alpine
+    container_name: safra-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - safra-network
+    depends_on:
+      statistics-api:
+        condition: service_healthy
+      device-registration-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
 networks:
   safra-network:
